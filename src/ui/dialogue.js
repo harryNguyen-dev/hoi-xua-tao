@@ -2,6 +2,7 @@
 import { SPEAKERS } from '../data/script.js';
 import { SFX } from '../audio/sfx.js';
 import { CONFIG } from '../config.js';
+import { t } from '../i18n.js';
 
 export class Dialogue {
   constructor(parent) {
@@ -12,7 +13,6 @@ export class Dialogue {
         <div class="dlg-portrait"><span class="dlg-face"></span><span class="dlg-badge"></span></div>
         <div class="dlg-name"></div>
         <div class="dlg-vi"></div>
-        <div class="dlg-en"></div>
         <div class="dlg-next">▼</div>
       </div>`;
     parent.appendChild(this.el);
@@ -21,7 +21,6 @@ export class Dialogue {
     this.badge = this.el.querySelector('.dlg-badge');
     this.nameEl = this.el.querySelector('.dlg-name');
     this.viEl = this.el.querySelector('.dlg-vi');
-    this.enEl = this.el.querySelector('.dlg-en');
     this.active = false;
     this.el.addEventListener('pointerdown', (e) => {
       e.preventDefault();
@@ -55,14 +54,12 @@ export class Dialogue {
     this.box.classList.add('bump');
     this.face.textContent = sp.face;
     this.badge.textContent = sp.badge;
-    this.nameEl.innerHTML = `${sp.name} <small>${sp.en}</small>`;
-    this.chars = Array.from((l.vi || '').normalize('NFC'));
+    this.nameEl.textContent = t({ vi: sp.name, en: sp.en });
+    this.chars = Array.from(t(l).normalize('NFC'));
     this.shown = 0;
     this.timer = 0;
     this.typing = true;
     this.viEl.textContent = '';
-    this.enEl.textContent = l.en || '';
-    this.enEl.classList.remove('show');
     this.el.classList.remove('done');
     this.lineAt = performance.now();
     this.onLine?.(l);
@@ -72,7 +69,6 @@ export class Dialogue {
     this.typing = false;
     this.shown = this.chars.length;
     this.viEl.textContent = this.chars.join('');
-    this.enEl.classList.add('show');
     this.el.classList.add('done');
   }
 
@@ -93,6 +89,13 @@ export class Dialogue {
     if (performance.now() - this.openedAt < CONFIG.DIALOGUE_GUARD_MS) return;
     if (this.typing) this.finishTyping();
     else if (performance.now() - this.lineAt > 120) this.next();
+  }
+
+  /** Đóng ngay, không gọi onDone (dùng khi thoát về màn hình chính). */
+  cancel() {
+    this.active = false;
+    this.onDone = null;
+    this.el.classList.add('hidden');
   }
 
   close() {

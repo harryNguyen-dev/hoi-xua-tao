@@ -61,6 +61,13 @@ export function unlockAudio() {
   }
 }
 
+/** Tạm dừng / tiếp tục toàn bộ âm thanh (nhạc nền đứng yên theo đồng hồ audio). */
+export function setAudioPaused(p) {
+  if (!ctx) return;
+  if (p) ctx.suspend();
+  else ctx.resume();
+}
+
 export function isMuted() {
   return muted;
 }

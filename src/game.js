@@ -13,6 +13,7 @@ import { Tuan } from './entities/tuan.js';
 import { Tiger } from './entities/tiger.js';
 import { SCRIPT, TUAN_BUBBLES, UI_TEXT, SEGMENT_NAMES, BUBBLES } from './data/script.js';
 import { SFX } from './audio/sfx.js';
+import { getLang } from './i18n.js';
 
 const S = STATES;
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -23,6 +24,7 @@ export class Game {
     this.hud = hud;
     this.dialogue = dialogue;
     this.onFinish = onFinish;
+    this.lang = getLang(); // bảng tên trong thế giới 3D vẽ theo ngôn ngữ lúc dựng
     this.scene = new THREE.Scene();
     this.uTime = { value: 0 };
     this.time = 0;

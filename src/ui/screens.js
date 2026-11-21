@@ -1,6 +1,7 @@
 // Màn hình: title, chuyển cảnh "HỒI XƯA...", chọn nghề (gag cuối), credits.
 import { UI_TEXT, CAREER, CREDITS } from '../data/script.js';
 import { SFX } from '../audio/sfx.js';
+import { t, getLang, setLang, LANGS } from '../i18n.js';
 
 const el = (tag, cls, html = '') => {
   const e = document.createElement(tag);
@@ -23,20 +24,31 @@ export class Screens {
 
   // ---------- TITLE ----------
   showTitle(onStart, isTouch = false) {
-    const keys = (isTouch ? UI_TEXT.touchKeys : UI_TEXT.keys).map((k) => `<li><kbd>${k.k}</kbd> ${k.vi} <small>${k.en}</small></li>`).join('');
-    const rotate = isTouch ? `<div class="rotate-hint">📱↻ ${UI_TEXT.rotate.vi} <small>${UI_TEXT.rotate.en}</small></div>` : '';
-    const s = el(
-      'div',
-      'screen title',
-      `<div class="title-card">
-        <div class="tagline">${UI_TEXT.tagline.vi} <small>${UI_TEXT.tagline.en}</small></div>
-        <h1>${UI_TEXT.title}</h1>
+    const s = el('div', 'screen title');
+    const render = () => {
+      const keys = (isTouch ? UI_TEXT.touchKeys : UI_TEXT.keys).map((k) => `<li><kbd>${k.k}</kbd> ${t(k)}</li>`).join('');
+      const rotate = isTouch ? `<div class="rotate-hint">📱↻ ${t(UI_TEXT.rotate)}</div>` : '';
+      const langBtns = LANGS.map((l) => `<button class="lang-btn ${l === getLang() ? 'on' : ''}" data-lang="${l}">${UI_TEXT.langs[l]}</button>`).join('');
+      s.innerHTML = `<div class="title-card">
+        <div class="lang-switch" role="group" aria-label="Language">${langBtns}</div>
+        <div class="tagline">${t(UI_TEXT.tagline)}</div>
+        <h1>${t(UI_TEXT.title)}</h1>
         <div class="subtitle">${UI_TEXT.subtitle}</div>
-        <button class="big-btn start">${UI_TEXT.start.vi} <small>${UI_TEXT.start.en}</small></button>
+        <button class="big-btn start">${t(UI_TEXT.start)}</button>
         <ul class="keys">${keys}</ul>
         ${rotate}
-      </div>`,
-    );
+      </div>`;
+      s.querySelector('.start').addEventListener('click', go);
+      s.querySelectorAll('.lang-btn').forEach((b) =>
+        b.addEventListener('click', () => {
+          if (b.dataset.lang === getLang()) return;
+          setLang(b.dataset.lang);
+          SFX.pop();
+          s.classList.add('again');
+          render();
+        }),
+      );
+    };
     this.parent.appendChild(s);
     let done = false;
     const go = () => {
@@ -50,43 +62,79 @@ export class Screens {
     const onKey = (e) => {
       if (e.code === 'Enter' || e.code === 'Space') go();
     };
-    s.querySelector('.start').addEventListener('click', go);
+    render();
     addEventListener('keydown', onKey);
   }
 
   // ---------- TRANSITION ----------
   transition({ vi, en, onMid, onEnd, hold = 1300 }) {
-    const t = el('div', 'transition', `<div class="tr-text"><div class="tr-vi">${vi}</div><div class="tr-en">${en}</div></div>`);
-    this.parent.appendChild(t);
-    requestAnimationFrame(() => t.classList.add('show'));
+    const tr = el('div', 'transition', '<div class="tr-text"><div class="tr-main"></div></div>');
+    tr.querySelector('.tr-main').textContent = t({ vi, en });
+    this.parent.appendChild(tr);
+    requestAnimationFrame(() => tr.classList.add('show'));
     (async () => {
       await wait(750);
       onMid?.();
       await wait(hold);
-      t.classList.add('hide');
+      tr.classList.add('hide');
       await wait(700);
-      t.remove();
+      tr.remove();
       onEnd?.();
     })();
+  }
+
+  // ---------- PAUSE ----------
+  showPause({ muted, onResume, onToggleMute, onQuit }) {
+    this.hidePause();
+    const P = UI_TEXT.pause;
+    const p = el(
+      'div',
+      'screen pause',
+      `<div class="pause-card">
+        <h2>${t(P.title)}</h2>
+        <button class="big-btn resume">▶ ${t(P.resume)}</button>
+        <div class="pause-row">
+          <button class="small-btn mute">${muted ? '🔈 ' + t(P.unmute) : '🔇 ' + t(P.mute)}</button>
+          <button class="small-btn quit">🏠 ${t(P.quit)}</button>
+        </div>
+        <div class="pause-hint">${t(P.hint)}</div>
+      </div>`,
+    );
+    p.addEventListener('pointerdown', (e) => e.stopPropagation());
+    p.querySelector('.resume').addEventListener('click', () => onResume?.());
+    p.querySelector('.mute').addEventListener('click', (e) => {
+      const m = onToggleMute?.();
+      e.currentTarget.textContent = m ? '🔈 ' + t(P.unmute) : '🔇 ' + t(P.mute);
+    });
+    p.querySelector('.quit').addEventListener('click', () => onQuit?.());
+    this.parent.appendChild(p);
+    this.pauseEl = p;
+    p.querySelector('.resume').focus();
+  }
+
+  hidePause() {
+    this.pauseEl?.remove();
+    this.pauseEl = null;
   }
 
   // ---------- CAREER SELECT ----------
   showCareer({ onDone }) {
     const B = CAREER.buttons;
-    const btn = (role) => `<button class="career-btn" data-role="${role}"><span class="ci">${B[role].icon}</span><span class="cv">${B[role].vi}</span><small>${B[role].en}</small></button>`;
+    const btnInner = (role) => `<span class="ci">${B[role].icon}</span><span class="cv">${t(B[role])}</span>`;
+    const btn = (role) => `<button class="career-btn" data-role="${role}">${btnInner(role)}</button>`;
     const s = el(
       'div',
       'screen career',
-      `<div class="career-dad"><span class="face">👨</span><div class="speech"><div class="sv">${CAREER.prompt.vi}</div><div class="se">${CAREER.prompt.en}</div></div></div>
-       <h2>${CAREER.title.vi}</h2>
-       <div class="career-sub">${CAREER.title.en}</div>
+      `<div class="career-dad"><span class="face">👨</span><div class="speech"><div class="sv">${t(CAREER.prompt)}</div></div></div>
+       <h2>${t(CAREER.title)}</h2>
        <div class="career-grid">${btn('doctor')}${btn('police')}${btn('painter')}${btn('gamedev')}</div>`,
     );
     this.parent.appendChild(s);
     this.careerEl = s;
     const speech = s.querySelector('.speech');
     const say = (l) => {
-      speech.innerHTML = `<div class="sv">${l.vi}</div><div class="se">${l.en}</div>`;
+      speech.innerHTML = '<div class="sv"></div>';
+      speech.firstChild.textContent = t(l);
       speech.classList.remove('pop');
       void speech.offsetWidth;
       speech.classList.add('pop');
@@ -195,7 +243,7 @@ export class Screens {
         police.classList.add('flip');
         setTimeout(() => {
           police.dataset.role = 'doctor';
-          police.innerHTML = `<span class="ci">${B.doctor.icon}</span><span class="cv">${B.doctor.vi}</span><small>${B.doctor.en}</small>`;
+          police.innerHTML = btnInner('doctor');
           police.classList.remove('flip');
           police.disabled = false;
           removed++;
@@ -244,23 +292,23 @@ export class Screens {
   // ---------- CREDITS ----------
   showCredits(stats, { onReplay, onRetell }) {
     const S = CREDITS.stats;
-    const lines = CREDITS.lines.map((l) => `<p class="${l.small ? 'small' : ''}">${l.vi}<small>${l.en}</small></p>`).join('');
+    const lines = CREDITS.lines.map((l) => `<p class="${l.small ? 'small' : ''}">${t(l)}</p>`).join('');
     const s = el(
       'div',
       'screen credits',
       `<div class="credits-roll">
-        <h2>${CREDITS.title}</h2>
+        <h2>${t(CREDITS.title)}</h2>
         ${lines}
         <div class="stats">
-          <div><span>${S.arrive.vi} <small>${S.arrive.en}</small></span><b class="${stats.late ? 'bad' : 'good'}">${stats.arriveText}</b></div>
-          <div><span>${S.bag.vi} <small>${S.bag.en}</small></span><b>${stats.bag}%</b></div>
-          <div><span>${S.falls.vi} <small>${S.falls.en}</small></span><b>${stats.falls}</b></div>
-          <div><span>${S.plays.vi} <small>${S.plays.en}</small></span><b>${stats.plays}</b></div>
-          <div class="tuan">${S.tuan.vi} <small>${S.tuan.en}</small></div>
+          <div><span>${t(S.arrive)}</span><b class="${stats.late ? 'bad' : 'good'}">${stats.arriveText}</b></div>
+          <div><span>${t(S.bag)}</span><b>${stats.bag}%</b></div>
+          <div><span>${t(S.falls)}</span><b>${stats.falls}</b></div>
+          <div><span>${t(S.plays)}</span><b>${stats.plays}</b></div>
+          <div class="tuan">${t(S.tuan)}</div>
         </div>
         <div class="credits-btns">
-          <button class="big-btn replay">${CREDITS.replay.vi} <small>${CREDITS.replay.en}</small></button>
-          <button class="big-btn alt retell">${CREDITS.retell.vi} <small>${CREDITS.retell.en}</small></button>
+          <button class="big-btn replay">${t(CREDITS.replay)}</button>
+          <button class="big-btn alt retell">${t(CREDITS.retell)}</button>
         </div>
       </div>`,
     );

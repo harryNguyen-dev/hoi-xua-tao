@@ -34,6 +34,9 @@ npm run preview    # thử bản build qua static server
 | `A` / `D` hoặc `←` / `→` (trên cầu khỉ) | Giữ thăng bằng (trên cầu nhân vật tự bước tới) |
 | `Enter` / `Space` / click | Qua câu thoại |
 | `M` | Tắt / bật âm |
+| `Esc` / `P` / nút ⏸ | Tạm dừng (tiếp tục, tắt tiếng, về màn hình chính). Chuyển tab là tự dừng. |
+
+**Ngôn ngữ:** chọn *Tiếng Việt* hoặc *English* ở màn hình chính (chỉ hiện một ngôn ngữ, lưu lại cho lần sau).
 
 Cảm ứng: nút ◀ ▶ (chạy / thăng bằng), ⤒ (nhảy), 🎒 (giơ cặp). Chạm màn hình để qua thoại. Nên xoay ngang.
 
@@ -64,7 +67,7 @@ src/
 ## Chỉnh nhanh
 
 - **Độ khó / thời gian**: `src/config.js`. Ví dụ `REAL_SECONDS_FOR_RUN` (90 phút in-game = bao nhiêu giây thật), `RUN_SPEED`, `BALANCE_*`, `FLOOD_CURRENT`, `TIGER_SPEED`.
-- **Thoại**: `src/data/script.js`. Câu mở đầu tự phóng đại thêm mỗi lần chơi lại (`INTRO_ESCALATION`).
+- **Thoại**: `src/data/script.js` (mỗi câu có `vi` và `en`; helper `t()` trong `src/i18n.js` chọn theo ngôn ngữ). Câu mở đầu tự phóng đại thêm mỗi lần chơi lại (`INTRO_ESCALATION`).
 - **Vị trí trigger / chướng ngại**: `LAYOUT` và `TRIGGERS` trong `src/world/level.js`.
 
 Với autopilot chơi hoàn hảo thì tới trường lúc khoảng 6:40; chơi bình thường (lề mề, té vài lần) thì khoảng 6:50–7:00.

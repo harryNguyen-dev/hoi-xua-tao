@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import * as P from './props.js';
 import { createWaterBox } from './water.js';
-import { SEGMENT_NAMES } from '../data/script.js';
+import { SEGMENT_NAMES, UI_TEXT } from '../data/script.js';
+import { t } from '../i18n.js';
 
 export const SEGMENTS = [
   { x0: 0, x1: 120 },
@@ -337,7 +338,7 @@ export function buildLevel(scene, uTime) {
     [108, -8],
   ])
     P.put(P.createEgret(r), x, -0.4, z, group);
-  const sign1 = P.createSignpost(SEGMENT_NAMES[0].vi, SEGMENT_NAMES[0].en);
+  const sign1 = P.createSignpost(t(SEGMENT_NAMES[0]));
   sign1.position.set(1.2, 0, -1.4);
   group.add(sign1);
 
@@ -404,7 +405,7 @@ export function buildLevel(scene, uTime) {
   updaters.push((dt, t) => {
     for (const h of hyac) h.position.y = canal.waterY + Math.sin(t * 1.5 + h.userData.seed) * 0.04;
   });
-  const sign2 = P.createSignpost(SEGMENT_NAMES[1].vi, SEGMENT_NAMES[1].en);
+  const sign2 = P.createSignpost(t(SEGMENT_NAMES[1]));
   sign2.position.set(121.5, 0, -1.4);
   group.add(sign2);
 
@@ -451,7 +452,7 @@ export function buildLevel(scene, uTime) {
     bush.scale.y = 0.7;
     group.add(bush);
   }
-  const sign3 = P.createSignpost(SEGMENT_NAMES[2].vi, SEGMENT_NAMES[2].en);
+  const sign3 = P.createSignpost(t(SEGMENT_NAMES[2]));
   sign3.position.set(221, 0, -1.4);
   group.add(sign3);
 
@@ -527,11 +528,11 @@ export function buildLevel(scene, uTime) {
     t.position.set(x, h2fn(x) - 0.1, -3.2 - r() * 4);
     hill2.add(t);
   }
-  const passSign = P.createSignpost('ĐÈO SỐ 2', '(mới mọc)');
+  const passSign = P.createSignpost(t(UI_TEXT.passSign.title), t(UI_TEXT.passSign.sub));
   passSign.position.set(470, h2fn(470), -1.5);
   passSign.rotation.z = -0.1;
   hill2.add(passSign);
-  const sign4 = P.createSignpost(SEGMENT_NAMES[3].vi, SEGMENT_NAMES[3].en);
+  const sign4 = P.createSignpost(t(SEGMENT_NAMES[3]));
   sign4.position.set(361.5, 0, -1.4);
   group.add(sign4);
 
@@ -578,7 +579,7 @@ export function buildLevel(scene, uTime) {
     t.position.set(522 + r() * 28, 0, -5 - r() * 9);
     group.add(t);
   }
-  const sign5 = P.createSignpost(SEGMENT_NAMES[4].vi, SEGMENT_NAMES[4].en);
+  const sign5 = P.createSignpost(t(SEGMENT_NAMES[4]));
   sign5.position.set(521.5, 0, -1.4);
   group.add(sign5);
 

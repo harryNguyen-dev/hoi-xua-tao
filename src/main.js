@@ -4,7 +4,8 @@ import './ui/style.css';
 import { CONFIG } from './config.js';
 import { STATES, GameState, loadPlays, savePlays } from './state.js';
 import { Input } from './input.js';
-import { unlockAudio, toggleMute, SFX, Music } from './audio/sfx.js';
+import { unlockAudio, toggleMute, isMuted, setAudioPaused, SFX, Music } from './audio/sfx.js';
+import { getLang } from './i18n.js';
 import { buildLivingRoom } from './world/livingroom.js';
 import { Game } from './game.js';
 import { HUD } from './ui/hud.js';
@@ -22,6 +23,7 @@ let screens;
 let view = 'room';
 let plays = loadPlays();
 let last = performance.now();
+let paused = false;
 
 const IN_WORLD = [S.PLAYING, S.DIALOGUE, S.TRANSFORM, S.FINISH];
 
@@ -57,6 +59,13 @@ async function boot() {
     const m = toggleMute();
     hud.setMuted(m);
   });
+  // Tạm dừng: Esc / P / nút ⏸, và tự dừng khi chuyển tab
+  Input.onKey('Escape', () => setPaused(!paused));
+  Input.onKey('KeyP', () => setPaused(!paused));
+  hud.onPause = () => setPaused(true);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && !CONFIG.DEBUG) setPaused(true);
+  });
   if (CONFIG.DEBUG) {
     for (let i = 1; i <= 5; i++) Input.onKey(`Digit${i}`, () => game.debugJump(i));
     Input.onKey('KeyT', () => game.debugClock());
@@ -71,12 +80,66 @@ async function boot() {
   GameState.onChange(onStateChange);
 
   document.getElementById('boot')?.remove();
+  showTitle();
+  requestAnimationFrame(frame);
+}
+
+function showTitle() {
   screens.showTitle(() => {
     unlockAudio();
     SFX.pop();
     startIntro();
   }, Input.isTouch);
-  requestAnimationFrame(frame);
+}
+
+function canPause() {
+  return view === 'game' && IN_WORLD.includes(GameState.current);
+}
+
+function setPaused(p) {
+  if (p && !canPause()) return;
+  if (p === paused) return;
+  paused = p;
+  setAudioPaused(p);
+  Input.clearEdges();
+  if (p) {
+    screens.showPause({
+      muted: isMuted(),
+      onResume: () => setPaused(false),
+      onToggleMute: () => {
+        const m = toggleMute();
+        hud.setMuted(m);
+        return m;
+      },
+      onQuit: () => quitToTitle(),
+    });
+  } else {
+    screens.hidePause();
+  }
+}
+
+/** Bỏ dở, về màn hình chính. */
+function quitToTitle() {
+  setPaused(false);
+  dialogue.cancel();
+  Music.stop();
+  hud.clearBanner();
+  game.dispose();
+  game = createGame();
+  view = 'room';
+  renderer.domElement.style.filter = 'none';
+  room.setSpeaker(null);
+  GameState.set(S.TITLE);
+  showTitle();
+}
+
+/** Bảng tên trong thế giới 3D vẽ theo ngôn ngữ: đổi ngôn ngữ thì dựng lại. */
+function ensureGameLang() {
+  hud.refreshLang();
+  if (game.lang !== getLang()) {
+    game.dispose();
+    game = createGame();
+  }
 }
 
 function createGame() {
@@ -117,6 +180,10 @@ function frame(now) {
   const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
   last = now;
   if (window.__dbg?.paused) return;
+  if (paused) {
+    renderer.render(game.scene, game.camera);
+    return;
+  }
   tick(dt);
 }
 
@@ -141,6 +208,7 @@ if (CONFIG.DEBUG) {
 
 // ------------------------------------------------------------ flow
 function startIntro() {
+  ensureGameLang();
   view = 'room';
   GameState.set(S.INTRO);
   const lvl = Math.min(plays, INTRO_ESCALATION.length - 1);
@@ -152,6 +220,7 @@ function startIntro() {
 }
 
 function toGame() {
+  ensureGameLang();
   GameState.set(S.TRANSITION);
   room.setSpeaker(null);
   const c = renderer.domElement;

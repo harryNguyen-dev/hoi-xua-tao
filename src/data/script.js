@@ -127,8 +127,18 @@ export const SEGMENT_NAMES = [
 ];
 
 export const UI_TEXT = {
-  title: 'HỒI XƯA TAO...',
+  title: { vi: 'HỒI XƯA TAO...', en: 'BACK IN MY DAY...' },
   subtitle: 'Go To School',
+  langs: { vi: 'Tiếng Việt', en: 'English' },
+  pause: {
+    title: { vi: 'TẠM DỪNG', en: 'PAUSED' },
+    resume: { vi: 'Tiếp tục', en: 'Resume' },
+    mute: { vi: 'Tắt tiếng', en: 'Mute' },
+    unmute: { vi: 'Bật tiếng', en: 'Unmute' },
+    quit: { vi: 'Về màn hình chính', en: 'Back to title' },
+    hint: { vi: 'Esc / P để tạm dừng', en: 'Esc / P to pause' },
+  },
+  passSign: { title: { vi: 'ĐÈO SỐ 2', en: 'PASS #2' }, sub: { vi: '(mới mọc)', en: '(brand new)' } },
   tagline: { vi: 'một câu chuyện có thật*', en: 'a true story*' },
   start: { vi: 'BẮT ĐẦU', en: 'START' },
   keys: [
@@ -138,16 +148,18 @@ export const UI_TEXT = {
     { k: 'A / D', vi: 'thăng bằng (cầu khỉ)', en: 'balance (bridge)' },
     { k: 'Enter', vi: 'qua thoại', en: 'next line' },
     { k: 'M', vi: 'tắt tiếng', en: 'mute' },
+    { k: 'Esc / P', vi: 'tạm dừng', en: 'pause' },
   ],
   touchKeys: [
     { k: '◀ ▶', vi: 'chạy / thăng bằng', en: 'run / balance' },
     { k: '⤒', vi: 'nhảy', en: 'jump' },
     { k: '🎒', vi: 'giơ cặp (ở suối)', en: 'lift bag (stream)' },
-    { k: 'Chạm', vi: 'qua thoại', en: 'tap for next line' },
+    { k: 'Chạm / Tap', vi: 'qua thoại', en: 'next line' },
+    { k: '⏸', vi: 'tạm dừng', en: 'pause' },
   ],
   rotate: { vi: 'Xoay ngang điện thoại để chơi đã hơn', en: 'Rotate to landscape for the best view' },
-  segmentLabel: 'ĐOẠN',
-  clockSuffix: 'sáng',
+  segmentLabel: { vi: 'ĐOẠN', en: 'STAGE' },
+  clockSuffix: { vi: 'sáng', en: 'AM' },
   bagLabel: { vi: 'Cặp khô', en: 'Dry bag' },
   balanceLabel: { vi: 'Giữ thăng bằng', en: 'Balance' },
   muted: { vi: 'Đã tắt tiếng', en: 'Muted' },
@@ -192,7 +204,7 @@ export const CAREER = {
 };
 
 export const CREDITS = {
-  title: 'HỒI XƯA TAO...',
+  title: { vi: 'HỒI XƯA TAO...', en: 'BACK IN MY DAY...' },
   lines: [
     { vi: 'Dựa trên câu chuyện có thật*', en: 'Based on a true story*' },
     { vi: '*được phóng đại mỗi năm một chút', en: '*exaggerated a little more every year', small: true },

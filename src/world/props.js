@@ -525,10 +525,11 @@ export function createLoudspeaker() {
   return g;
 }
 
-export function createSignpost(vi, en) {
+export function createSignpost(title, sub) {
   const g = new THREE.Group();
   put(mesh(cyl(0.06, 0.07, 1.9, 5), '#6B4A2B'), 0, 0.95, 0, g);
-  const tex = textTexture([{ text: vi, size: 54 }, { text: en, size: 30, color: '#E8D7B0' }], { w: 512, h: 160, bg: '#7A4A28', border: '#4A2C16' });
+  const lines = sub ? [{ text: title, size: 54 }, { text: sub, size: 34, color: '#E8D7B0' }] : [{ text: title, size: 64 }];
+  const tex = textTexture(lines, { w: 512, h: 160, bg: '#7A4A28', border: '#4A2C16' });
   const board = put(new THREE.Mesh(box(1.9, 0.6, 0.06), [mat('#5A3519'), mat('#5A3519'), mat('#5A3519'), mat('#5A3519'), new THREE.MeshLambertMaterial({ map: tex }), mat('#5A3519')]), 0, 1.65, 0.04, g);
   board.castShadow = true;
   return g;

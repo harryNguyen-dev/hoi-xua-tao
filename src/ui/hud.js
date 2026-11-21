@@ -1,6 +1,7 @@
-// HUD: đồng hồ, thanh "Cặp khô", tên đoạn, thanh thăng bằng, gợi ý, banner, bong bóng chữ.
+// HUD: đồng hồ, thanh "Cặp khô", tên đoạn, thanh thăng bằng, gợi ý, banner, bong bóng chữ, nút tạm dừng.
 import * as THREE from 'three';
 import { UI_TEXT } from '../data/script.js';
+import { t } from '../i18n.js';
 
 const el = (tag, cls, html = '') => {
   const e = document.createElement(tag);
@@ -13,16 +14,19 @@ export class HUD {
   constructor(parent) {
     this.root = el('div', 'hud hidden');
     this.root.innerHTML = `
-      <div class="hud-seg"><div class="seg-num"></div><div class="seg-vi"></div><div class="seg-en"></div></div>
+      <div class="hud-seg"><div class="seg-num"></div><div class="seg-name"></div></div>
       <div class="hud-right">
-        <div class="hud-clock"><span class="ic">⏰</span><span class="time">5:30</span><small>${UI_TEXT.clockSuffix}</small></div>
+        <div class="hud-row">
+          <button class="hud-pause" aria-label="Pause">⏸</button>
+          <div class="hud-clock"><span class="ic">⏰</span><span class="time">5:30</span><small class="clock-suffix"></small></div>
+        </div>
         <div class="hud-bag">
-          <div class="bag-label">🎒 ${UI_TEXT.bagLabel.vi} <small>${UI_TEXT.bagLabel.en}</small></div>
+          <div class="bag-label">🎒 <span class="bag-text"></span></div>
           <div class="bar"><div class="fill"></div></div>
         </div>
       </div>
       <div class="hud-balance hidden">
-        <div class="bal-label">${UI_TEXT.balanceLabel.vi} <small>${UI_TEXT.balanceLabel.en}</small></div>
+        <div class="bal-label"></div>
         <div class="bal-track"><div class="bal-zone"></div><div class="bal-needle"></div></div>
         <div class="bal-keys"><span>A ◀</span><span>▶ D</span></div>
       </div>
@@ -45,8 +49,7 @@ export class HUD {
     const q = (s) => this.root.querySelector(s);
     this.segEl = q('.hud-seg');
     this.segNum = q('.seg-num');
-    this.segVi = q('.seg-vi');
-    this.segEn = q('.seg-en');
+    this.segName = q('.seg-name');
     this.timeEl = q('.time');
     this.clockEl = q('.hud-clock');
     this.bagEl = q('.hud-bag');
@@ -57,12 +60,30 @@ export class HUD {
     this.bannerEl = q('.hud-banner');
     this.muteEl = q('.hud-mute');
     this.debugEl = q('.hud-debug');
+    this.pauseBtn = q('.hud-pause');
+    this.onPause = null;
+    this.pauseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.onPause?.();
+    });
+    this.pauseBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
     this.bubbles = new Map();
     this.hintTimer = null;
     this.bannerTimer = null;
     this.lastMin = -1;
     this.lastBag = -1;
     this._v = new THREE.Vector3();
+    this.refreshLang();
+  }
+
+  /** Cập nhật các nhãn cố định theo ngôn ngữ hiện tại. */
+  refreshLang() {
+    const q = (s) => this.root.querySelector(s);
+    q('.clock-suffix').textContent = t(UI_TEXT.clockSuffix);
+    q('.bag-text').textContent = t(UI_TEXT.bagLabel);
+    q('.bal-label').textContent = t(UI_TEXT.balanceLabel);
+    this.pauseBtn.title = t(UI_TEXT.pause.hint);
+    if (this.seg) this.setSegment(this.seg.n, this.seg.name);
   }
 
   show(v, touch = false) {
@@ -72,9 +93,9 @@ export class HUD {
   }
 
   setSegment(n, name) {
-    this.segNum.textContent = `${UI_TEXT.segmentLabel} ${n}`;
-    this.segVi.textContent = name.vi;
-    this.segEn.textContent = name.en;
+    this.seg = { n, name };
+    this.segNum.textContent = `${t(UI_TEXT.segmentLabel)} ${n}`;
+    this.segName.textContent = t(name);
     this.segEl.classList.remove('pop');
     void this.segEl.offsetWidth;
     this.segEl.classList.add('pop');
@@ -116,24 +137,30 @@ export class HUD {
     }
   }
 
-  hint(t, seconds = 5) {
+  hint(text, seconds = 5) {
     clearTimeout(this.hintTimer);
-    if (!t) {
+    if (!text) {
       this.hintEl.classList.add('hidden');
       return;
     }
-    this.hintEl.innerHTML = `<div>${t.vi}</div><small>${t.en}</small>`;
+    this.hintEl.textContent = t(text);
     this.hintEl.classList.remove('hidden');
     this.hintTimer = setTimeout(() => this.hintEl.classList.add('hidden'), seconds * 1000);
   }
 
-  banner(t, seconds = 2.2, cls = '') {
+  banner(text, seconds = 2.2, cls = '') {
     clearTimeout(this.bannerTimer);
     this.bannerEl.className = `hud-banner ${cls}`;
-    this.bannerEl.innerHTML = `<div class="b-vi">${t.vi}</div><div class="b-en">${t.en}</div>`;
+    this.bannerEl.innerHTML = '<div class="b-text"></div>';
+    this.bannerEl.firstChild.textContent = t(text);
     void this.bannerEl.offsetWidth;
     this.bannerEl.classList.add('show');
     this.bannerTimer = setTimeout(() => this.bannerEl.classList.add('hidden'), seconds * 1000);
+  }
+
+  clearBanner() {
+    clearTimeout(this.bannerTimer);
+    this.bannerEl.classList.add('hidden');
   }
 
   setMuted(m) {
@@ -154,7 +181,8 @@ export class HUD {
       this.bubbles.set(key, b);
     }
     b.el.className = `bubble ${cls}`;
-    b.el.innerHTML = `<div class="bv">${vi}</div>${en ? `<div class="be">${en}</div>` : ''}`;
+    b.el.innerHTML = '<div class="bv"></div>';
+    b.el.firstChild.textContent = t({ vi, en });
     b.getPos = getPos;
     b.life = seconds;
     b.el.classList.remove('out');
